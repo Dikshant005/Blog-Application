@@ -13,13 +13,11 @@ const { checkForAuthenticationCookie } = require("./middleware/authentication")
 
 const app = express()
 const PORT = process.env.PORT 
+console.log('Attempting to connect to MongoDB URL:', process.env.MONGO_URL);
+mongoose.connect(process.env.MONGO_URL).then((e)=>console.log("Mongodb connected"))
 
-mongoose.connect(process.env.MONGO_URL).then((e)=>console.log("mongodb connected"))
-
-// Body parsers so POST data is available on req.body
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
-// cookieParser must be invoked to return the middleware function
 app.use(cookieParser())
 app.use(checkForAuthenticationCookie("token"))
 app.use(express.static(path.resolve('./public')))
@@ -35,7 +33,6 @@ app.get('/',async(req,res)=>{
     })
 })
 
-// convenience redirect: /signup -> /user/signup (route is mounted under /user)
 app.get('/signup', (req, res) => {
     return res.redirect('/user/signup')
 })
