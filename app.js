@@ -13,7 +13,6 @@ const { checkForAuthenticationCookie } = require("./middleware/authentication")
 
 const app = express()
 const PORT = process.env.PORT 
-console.log('Attempting to connect to MongoDB URL:', process.env.MONGO_URL);
 mongoose.connect(process.env.MONGO_URL).then((e)=>console.log("Mongodb connected"))
 
 app.use(express.urlencoded({ extended: false }))
@@ -25,8 +24,10 @@ app.use(express.static(path.resolve('./public')))
 app.set("view engine","ejs")
 app.set("views",path.resolve("./views"))
 
+
 app.get('/',async(req,res)=>{
-    const allBlogs = await Blog.find({})
+    console.log('req.user:', req.user);
+    const allBlogs = await Blog.find({}).populate('createdBy')
     res.render('home',{
         user: req.user,
         blogs: allBlogs

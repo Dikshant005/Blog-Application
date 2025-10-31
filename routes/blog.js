@@ -17,7 +17,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "uploads", // Cloudinary folder name
+    folder: "uploads", 
     allowed_formats: ["jpg", "jpeg", "png"],
   },
 });
@@ -66,6 +66,39 @@ router.post("/", upload.single('coverImageURL'), async (req, res) => {
   } catch (err) {
     console.error("Error uploading blog:", err);
     return res.status(500).send("Something went wrong!");
+  }
+});
+
+router.post("/delete/:id", async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+
+    if (!blog) {
+      return res.status(404).send("Blog not found");
+    }
+
+    // Check if the current user is the creator
+    if (blog.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).send("You are not authorized to delete this blog");
+    }
+
+    //Delete image from Cloudinary if it exists
+    if (blog.coverImageURL) {
+      const publicId = blog.coverImageURL
+        .split("/")
+        .slice(-2)
+        .join("/")
+        .split(".")[0]; // Extract public ID from URL
+      await cloudinary.uploader.destroy(publicId);
+    }
+
+    // Delete blog
+    await Blog.findByIdAndDelete(req.params.id);
+
+    return res.redirect("/");
+  } catch (err) {
+    console.error("Error deleting blog:", err);
+    return res.status(500).send("Something went wrong while deleting the blog");
   }
 });
 
